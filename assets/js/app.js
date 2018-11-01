@@ -48,7 +48,6 @@ function yScale(popData, chosenYAxis) {
 // function used for updating xAxis var upon click on axis label
 function renderXAxes(newXScale, xAxis) {
   var bottomAxis = d3.axisBottom(newXScale);
-
   xAxis.transition()
     .duration(1000)
     .call(bottomAxis);
@@ -56,9 +55,9 @@ function renderXAxes(newXScale, xAxis) {
   return xAxis;
 }
 
+// function used for updating yAxis var upon click on axis label
 function renderYAxes(newYScale, yAxis) {
   var leftAxis = d3.axisLeft(newYScale);
-
   yAxis.transition()
     .duration(1000)
     .call(leftAxis);
@@ -108,7 +107,7 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
 
   var toolTip = d3.tip()
     .attr("class", "tooltip")
-    .offset([80, -60])
+    .direction("n")
     .html(function(d) {
       return (`${d.state}<br>${xLabel}: ${d[chosenXAxis]}<br>${yLabel}: ${d[chosenYAxis]}`);
     });
@@ -116,9 +115,8 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
   circlesGroup.call(toolTip);
 
   circlesGroup.on("mouseover", function(data) {
-    toolTip.show(data);
+    toolTip.show(data, this);
   })
-    // onmouseout event
     .on("mouseout", function(data, index) {
       toolTip.hide(data);
     });
@@ -182,15 +180,12 @@ function successHandle(popData) {
     .attr("cy", d => yLinearScale(d[chosenYAxis]))
     .attr("r", 10)
     .attr("fill", "blue")
-    .attr("opacity", ".75")
-    .text(d => d.abbr);
+    .attr("opacity", ".75");
 
-  // Create group for  3 x-axis labels
-  var xlabelsGroup = chartGroup.append("g")
+  var xlabelsGroup = chartGroup.append("g")  // Create group for  3 x-axis labels
     .attr("transform", `translate(${width / 2}, ${height + 20})`);
 
-  // Create group for  3 x-axis labels
-  var ylabelsGroup = chartGroup.append("g")
+  var ylabelsGroup = chartGroup.append("g") // Create group for  3 y-axis labels
     .attr("transform", "rotate(-90)");
 
   var povertyLabel = xlabelsGroup.append("text")
@@ -216,7 +211,7 @@ function successHandle(popData) {
 
   var healthcareLabel = ylabelsGroup.append("text")
     .attr("x", 0 - (height / 2))
-    .attr("y", 0 - margin.left + 20)
+    .attr("y", 0 - margin.left + 60)
     .attr("value", "healthcare") // value to grab for event listener
     .classed("active", true)
     .text("Lacks Healthcare (%)");
@@ -230,19 +225,10 @@ function successHandle(popData) {
 
   var obeseLabel = ylabelsGroup.append("text")
     .attr("x", 0 - (height / 2))
-    .attr("y", 0 - margin.left + 60)
+    .attr("y", 0 - margin.left + 20)
     .attr("value", "obesity") // value to grab for event listener
     .classed("inactive", true)
     .text("Obese (%)");
-
-  // append y axis
-  // chartGroup.append("text")
-  //   .attr("transform", "rotate(-90)")
-  //   .attr("y", 0 - margin.left)
-  //   .attr("x", 0 - (height / 2))
-  //   .attr("dy", "1em")
-  //   .classed("axis-text", true)
-  //   .text("D3 Dabbler");
 
   // updateToolTip function above csv import
   var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);

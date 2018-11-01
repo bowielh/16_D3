@@ -29,3 +29,11 @@ body {
   margin: 0;
   font-size: 16px;
 }
+
+.tooltip {
+  padding: .5%;
+  background-color: #6d6c7acc;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+}
