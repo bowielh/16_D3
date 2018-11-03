@@ -36,6 +36,7 @@ function xScale(popData, chosenXAxis) {
   return xLinearScale;
 }
 
+// function used for updating y-scale var upon click on axis label
 function yScale(popData, chosenYAxis) {
   // create scales
   var yLinearScale = d3.scaleLinear()
@@ -65,25 +66,40 @@ function renderYAxes(newYScale, yAxis) {
   return yAxis;
 }
 
-// function used for updating circles group with a transition to new circles
+// function used for updating x location of circles group with a transition to new circles
 function renderXCircles(circlesGroup, newXScale, chosenXaxis) {
   circlesGroup.transition()
     .duration(1000)
     .attr("cx", d => newXScale(d[chosenXAxis]));
-
-  return circlesGroup;
+  return circlesGroup
 }
 
+// function used for updating y location of circles group with a transition to new circles
 function renderYCircles(circlesGroup, newYScale, chosenYaxis) {
   circlesGroup.transition()
     .duration(1000)
     .attr("cy", d => newYScale(d[chosenYAxis]));
-
   return circlesGroup;
 }
 
-// function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
+// function used for updating x location of circles group with a transition to new text
+function renderXText(textGroup, newXScale, chosenXaxis) {
+  textGroup.transition()
+    .duration(1000)
+    .attr("dx", d => newXScale(d[chosenXAxis]));
+  return textGroup
+}
+
+// function used for updating y location of circles group with a transition to new text
+function renderYText(textGroup, newYScale, chosenYaxis) {
+  textGroup.transition()
+    .duration(1000)
+    .attr("dy", d => newYScale(d[chosenYAxis]) + 4);
+  return textGroup;
+}
+
+// function used for updating text group with new tooltip
+function updateToolTip(chosenXAxis, chosenYAxis, textGroup) {
 
   if (chosenXAxis === "poverty") {
     var xLabel = "In Poverty (%)";
@@ -112,16 +128,16 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
       return (`${d.state}<br>${xLabel}: ${d[chosenXAxis]}<br>${yLabel}: ${d[chosenYAxis]}`);
     });
 
-  circlesGroup.call(toolTip);
+  textGroup.call(toolTip);
 
-  circlesGroup.on("mouseover", function(data) {
+  textGroup.on("mouseover", function(data) {
     toolTip.show(data, this);
   })
     .on("mouseout", function(data, index) {
       toolTip.hide(data);
     });
 
-  return circlesGroup;
+  return textGroup;
 }
 
 // Retrieve data from the CSV file and execute everything below
@@ -171,8 +187,12 @@ function successHandle(popData) {
     .classed("y-axis", true)
     .call(leftAxis);
 
-  // append initial circles
-  var circlesGroup = chartGroup.selectAll("circle")
+  // create group for data
+  var dataGroup = chartGroup.append("g")
+    .classed("data-group", true);
+
+  // append circles to dataGroup
+  var circlesGroup = dataGroup.selectAll("circle")
     .data(popData)
     .enter()
     .append("circle")
@@ -181,6 +201,19 @@ function successHandle(popData) {
     .attr("r", 10)
     .attr("fill", "blue")
     .attr("opacity", ".75");
+
+  // append text to dataGroup
+  var textGroup = dataGroup.selectAll("text")
+    .data(popData)
+    .enter()
+    .append("text")
+    .attr("dx", d => xLinearScale(d[chosenXAxis]))
+    .attr("dy", d => yLinearScale(d[chosenYAxis]) + 4)
+    .attr("text-anchor", "middle")
+    .style("fill", "white")
+    .style("font-size", '10px')
+    .style("font-weight", 'bold')
+    .text(d => d.abbr);
 
   var xlabelsGroup = chartGroup.append("g")  // Create group for  3 x-axis labels
     .attr("transform", `translate(${width / 2}, ${height + 20})`);
@@ -231,7 +264,7 @@ function successHandle(popData) {
     .text("Obese (%)");
 
   // updateToolTip function above csv import
-  var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+  var textGroup = updateToolTip(chosenXAxis, chosenYAxis, textGroup);
 
   // x axis labels event listener
   xlabelsGroup.selectAll("text")
@@ -243,7 +276,8 @@ function successHandle(popData) {
         xLinearScale = xScale(popData, chosenXAxis); // updates x scale for new data
         xAxis = renderXAxes(xLinearScale, xAxis); // updates x axis with transition
         circlesGroup = renderXCircles(circlesGroup, xLinearScale, chosenXAxis); // updates circles with new x values
-        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup); // updates tooltips with new info
+        textGroup = renderXText(textGroup, xLinearScale, chosenXAxis); // updates text with new x values
+        textGroup = updateToolTip(chosenXAxis, chosenYAxis, textGroup); // updates tooltips with new info
 
         // changes classes to change bold text
         if (chosenXAxis === "poverty") {
@@ -292,7 +326,8 @@ function successHandle(popData) {
         yLinearScale = yScale(popData, chosenYAxis); // updates x scale for new data
         yAxis = renderYAxes(yLinearScale, yAxis); // updates x axis with transition
         circlesGroup = renderYCircles(circlesGroup, yLinearScale, chosenYAxis); // updates circles with new x values
-        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup); // updates tooltips with new info
+        textGroup = renderYText(textGroup, yLinearScale, chosenYAxis); // updates text with new y values
+        textGroup = updateToolTip(chosenXAxis, chosenYAxis, textGroup); // updates tooltips with new info
 
         // changes classes to change bold text
         if (chosenYAxis === "healthcare") {
